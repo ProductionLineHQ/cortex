@@ -4,7 +4,9 @@
 
 Claude Code forgets everything between sessions. Your architecture, your preferences, every decision you made yesterday — gone. Cortex is a local MCP server that captures context during your sessions and feeds it back automatically. Your AI starts every conversation knowing exactly where you left off.
 
-<!-- DEMO GIF: record with vhs or asciinema, replace this line -->
+<p align="center">
+  <img src="assets/cortex-demo.gif" alt="Cortex demo — install, status, show memories, search" width="100%">
+</p>
 
 <p align="center">
   <a href="https://www.theproductionline.ai/tools/cortex"><strong>Product Page</strong></a> &nbsp;·&nbsp;
