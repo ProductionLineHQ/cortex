@@ -392,6 +392,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT -- [The Production Line](https://theproductionline.com)
+MIT -- [The Production Line](https://www.theproductionline.ai/tools/cortex)
 
 Built by [Koundinya Lanka](https://github.com/koundinyalanka).
