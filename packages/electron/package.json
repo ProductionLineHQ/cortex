@@ -14,7 +14,7 @@
   "build": {
     "appId": "sh.cortex.desktop",
     "productName": "Cortex",
-    "copyright": "Copyright 2026 K2N2 Studio",
+    "copyright": "Copyright 2026 The Production Line",
     "directories": {
       "output": "dist",
       "buildResources": "assets"
@@ -46,7 +46,7 @@
     "win": {
       "target": ["nsis"],
       "icon": "assets/icon.ico",
-      "certificateSubjectName": "K2N2 Studio"
+      "certificateSubjectName": "The Production Line"
     },
     "linux": {
       "target": ["AppImage", "deb"],

@@ -4,7 +4,7 @@
 
 ```bash
 # Clone and install
-git clone https://github.com/k2n2studio/cortex.git
+git clone https://github.com/theproductionline/cortex.git
 cd cortex
 pnpm install
 

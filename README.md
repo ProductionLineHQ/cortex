@@ -392,6 +392,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT -- [K2N2 Studio](https://k2n2studio.com)
+MIT -- [The Production Line](https://theproductionline.com)
 
 Built by [Koundinya Lanka](https://github.com/koundinyalanka).

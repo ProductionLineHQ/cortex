@@ -3,9 +3,9 @@
   "displayName": "Cortex — Memory for Claude Code",
   "description": "Persistent memory layer for Claude Code. Save, search, and browse memories from VS Code.",
   "version": "1.0.0",
-  "publisher": "k2n2studio",
+  "publisher": "theproductionline",
   "license": "MIT",
-  "author": "K2N2 Studio",
+  "author": "The Production Line",
   "icon": "assets/icon.png",
   "galleryBanner": {
     "color": "#0A0A0F",

@@ -186,7 +186,7 @@ function updateTrayMenu() {
         dialog.showMessageBox({
           title: 'Cortex',
           message: 'Cortex — Persistent Memory for Claude Code',
-          detail: `Version ${app.getVersion()}\n\u00A9 2026 K2N2 Studio\nA project by The Production Line`,
+          detail: `Version ${app.getVersion()}\n\u00A9 2026 The Production Line\nA project by The Production Line`,
           buttons: ['OK'],
         });
       },

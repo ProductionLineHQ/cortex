@@ -399,7 +399,7 @@ These are known behaviors that are standard for developer tools in this category
 If you discover a security vulnerability:
 
 1. **Do NOT open a public issue**
-2. Email **koundinya@k2n2studio.com** with:
+2. Email **koundinya@theproductionline.com** with:
    - Description of the vulnerability
    - Steps to reproduce
    - Potential impact assessment
@@ -412,4 +412,4 @@ See [SECURITY.md](../SECURITY.md) for full responsible disclosure policy.
 ---
 
 *Cortex Security Model v1.0 — Last updated March 2026*
-*A project by K2N2 Studio — The Production Line*
+*A project by The Production Line — The Production Line*

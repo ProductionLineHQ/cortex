@@ -4,7 +4,7 @@
 
 If you discover a security vulnerability in Cortex, please report it responsibly.
 
-**Email:** security@k2n2studio.com
+**Email:** security@theproductionline.com
 
 **SLA:**
 - Acknowledgement within 48 hours

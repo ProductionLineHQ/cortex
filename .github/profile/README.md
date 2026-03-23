@@ -10,4 +10,4 @@ Cortex is a persistent memory layer for Claude Code — giving your AI assistant
 
 ---
 
-Built by [K2N2 Studio](https://k2n2studio.com). MIT Licensed.
+Built by [The Production Line](https://theproductionline.com). MIT Licensed.

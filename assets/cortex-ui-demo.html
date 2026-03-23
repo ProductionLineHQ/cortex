@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cortex — Persistent Memory for Claude Code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A0A0F;
+  --bg2: #111118;
+  --bg3: #1A1A24;
+  --surface: #16161F;
+  --surface2: #1E1E2A;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.10);
+  --text: #F0EEF8;
+  --text2: #9B98B0;
+  --text3: #5C5970;
+  --accent: #7C6FE0;
+  --accent2: #A99CFF;
+  --accent3: #C4BAFF;
+  --green: #34D399;
+  --green-dim: rgba(52,211,153,0.12);
+  --amber: #FBBF24;
+  --amber-dim: rgba(251,191,36,0.10);
+  --red: #F87171;
+  --indigo: #818CF8;
+  --teal: #2DD4BF;
+}
+[data-theme="light"] {
+  --bg: #F4F2FF;
+  --bg2: #EBE8FF;
+  --bg3: #DDD9FF;
+  --surface: #FFFFFF;
+  --surface2: #F7F5FF;
+  --border: rgba(100,80,200,0.10);
+  --border2: rgba(100,80,200,0.18);
+  --text: #1A1830;
+  --text2: #5048A0;
+  --text3: #9B94CC;
+  --accent: #5B4FD4;
+  --accent2: #7B6FE8;
+  --accent3: #9B8FFF;
+  --green: #059669;
+  --green-dim: rgba(5,150,105,0.10);
+  --amber: #D97706;
+  --amber-dim: rgba(217,119,6,0.10);
+  --red: #DC2626;
+  --indigo: #4F46E5;
+  --teal: #0D9488;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 48px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+.logo {
+  font-family: 'Fraunces', serif;
+  font-size: 22px; font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+.logo span { color: var(--accent); }
+.nav-links { display: flex; align-items: center; gap: 32px; }
+.nav-links a {
+  font-size: 13px; font-weight: 500; color: var(--text2);
+  text-decoration: none; letter-spacing: 0.02em;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.theme-toggle {
+  width: 36px; height: 36px; border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text2); font-size: 15px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { color: var(--text); border-color: var(--accent); }
+
+/* ── VIEW TABS ── */
+.view-tabs {
+  display: flex; gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 4px;
+}
+.view-tab {
+  padding: 6px 16px; font-size: 12px; font-weight: 500;
+  border-radius: 7px; border: none; cursor: pointer;
+  color: var(--text3); background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s; letter-spacing: 0.02em;
+}
+.view-tab.active { background: var(--accent); color: white; }
+
+/* ── SECTIONS ── */
+.view-section { display: none; }
+.view-section.active { display: block; }
+
+/* ══════════════════════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════════════════════ */
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 120px 48px 80px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(124,111,224,0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 20% 60%, rgba(45,212,191,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 30% 25% at 80% 40%, rgba(129,140,248,0.08) 0%, transparent 60%);
+}
+.hero-grid {
+  position: absolute; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 80%);
+}
+.hero-content { position: relative; z-index: 1; max-width: 800px; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 999px;
+  border: 1px solid rgba(124,111,224,0.3);
+  background: rgba(124,111,224,0.08);
+  font-size: 12px; font-weight: 500; color: var(--accent3);
+  letter-spacing: 0.05em; text-transform: uppercase;
+  margin-bottom: 32px;
+  animation: fadeUp 0.6s ease both;
+}
+.badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s ease infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(52px, 8vw, 96px);
+  font-weight: 900; line-height: 0.95;
+  letter-spacing: -3px;
+  color: var(--text);
+  margin-bottom: 24px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+.hero-title em { font-style: italic; color: var(--accent2); }
+
+.hero-sub {
+  font-size: 18px; line-height: 1.7; color: var(--text2);
+  max-width: 560px; margin: 0 auto 48px;
+  font-weight: 300;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+.hero-cta {
+  display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+.btn-primary {
+  padding: 14px 32px; border-radius: 10px;
+  background: var(--accent); color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; border: none;
+  cursor: pointer; letter-spacing: 0.02em;
+  transition: all 0.2s;
+  box-shadow: 0 0 0 0 rgba(124,111,224,0.4);
+}
+.btn-primary:hover {
+  background: var(--accent2);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(124,111,224,0.3);
+}
+.btn-secondary {
+  padding: 14px 32px; border-radius: 10px;
+  background: var(--surface); color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px; font-weight: 400;
+  border: 1px solid var(--border2);
+  cursor: pointer; letter-spacing: 0.02em;
+  transition: all 0.2s;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent2); }
+
+/* PROBLEM STRIP */
+.problem-strip {
+  padding: 80px 48px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.problem-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 80px; align-items: center;
+}
+.problem-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--red);
+  margin-bottom: 16px;
+}
+.problem-title {
+  font-family: 'Fraunces', serif;
+  font-size: 38px; font-weight: 700; line-height: 1.15;
+  color: var(--text); margin-bottom: 20px;
+}
+.problem-body { font-size: 15px; line-height: 1.8; color: var(--text2); }
+
+.amnesia-card {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 16px; padding: 28px; position: relative; overflow: hidden;
+}
+.amnesia-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--red), transparent);
+}
+.amnesia-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 20px;
+}
+.amnesia-icon { font-size: 20px; }
+.amnesia-tag {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--red);
+  background: rgba(248,113,113,0.1);
+  padding: 3px 10px; border-radius: 999px;
+}
+.amnesia-messages { display: flex; flex-direction: column; gap: 10px; }
+.amnesia-msg {
+  padding: 10px 14px; border-radius: 8px;
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  line-height: 1.5;
+}
+.amnesia-msg.user {
+  background: var(--surface2); color: var(--text2);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+}
+.amnesia-msg.claude {
+  background: rgba(248,113,113,0.06); color: var(--red);
+  border: 1px solid rgba(248,113,113,0.15);
+}
+
+/* HOW IT WORKS */
+.how-section { padding: 100px 48px; }
+.section-header { text-align: center; margin-bottom: 64px; }
+.section-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 42px; font-weight: 700; line-height: 1.15;
+  color: var(--text);
+}
+
+.flow-steps {
+  max-width: 900px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 0;
+}
+.flow-step {
+  display: grid; grid-template-columns: 60px 1fr;
+  gap: 32px; position: relative;
+}
+.flow-step:not(:last-child)::after {
+  content: '';
+  position: absolute; left: 29px; top: 56px; bottom: 0;
+  width: 2px; background: linear-gradient(180deg, var(--accent) 0%, var(--border) 100%);
+}
+.step-num {
+  width: 52px; height: 52px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700;
+  color: var(--accent); flex-shrink: 0; position: relative; z-index: 1;
+}
+.step-content { padding: 12px 0 48px; }
+.step-title {
+  font-size: 17px; font-weight: 600; color: var(--text);
+  margin-bottom: 8px;
+}
+.step-body { font-size: 14px; line-height: 1.7; color: var(--text2); }
+.step-code {
+  margin-top: 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 16px;
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  color: var(--accent3); line-height: 1.6;
+}
+
+/* INSTALL SECTION */
+.install-section {
+  padding: 80px 48px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.install-inner { max-width: 900px; margin: 0 auto; }
+.install-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 20px; margin-top: 48px;
+}
+.install-card {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; padding: 28px; position: relative;
+  overflow: hidden; transition: border-color 0.2s;
+}
+.install-card:hover { border-color: var(--accent); }
+.install-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.install-card:hover::before { opacity: 1; }
+.install-method {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text3);
+  margin-bottom: 8px;
+}
+.install-for {
+  font-size: 15px; font-weight: 600; color: var(--text);
+  margin-bottom: 16px;
+}
+.install-cmd {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+  font-family: 'DM Mono', monospace; font-size: 11.5px;
+  color: var(--green); line-height: 1.5;
+}
+
+/* TRUST SECTION */
+.trust-section { padding: 80px 48px; }
+.trust-grid {
+  max-width: 1100px; margin: 48px auto 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+}
+.trust-card {
+  padding: 28px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.trust-icon { font-size: 28px; margin-bottom: 14px; }
+.trust-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.trust-body { font-size: 13px; line-height: 1.7; color: var(--text2); }
+
+/* FOOTER */
+.landing-footer {
+  padding: 40px 48px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-brand {
+  font-family: 'Fraunces', serif;
+  font-size: 18px; font-weight: 700; color: var(--text);
+}
+.footer-brand span { color: var(--accent); }
+.footer-note { font-size: 12px; color: var(--text3); }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a { font-size: 12px; color: var(--text3); text-decoration: none; }
+.footer-links a:hover { color: var(--text); }
+
+/* ══════════════════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════════════════ */
+.dashboard {
+  padding-top: 80px;
+  min-height: 100vh;
+  background: var(--bg);
+}
+.dash-header {
+  padding: 32px 48px 0;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.dash-title-group { }
+.dash-greeting {
+  font-size: 12px; font-weight: 500; color: var(--text3);
+  letter-spacing: 0.04em; margin-bottom: 4px;
+}
+.dash-title {
+  font-family: 'Fraunces', serif;
+  font-size: 32px; font-weight: 700; color: var(--text);
+}
+.dash-actions { display: flex; gap: 10px; }
+.dash-btn {
+  padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.2s;
+  border: 1px solid var(--border2); background: var(--surface); color: var(--text2);
+}
+.dash-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.dash-btn:hover { color: var(--text); border-color: var(--accent); }
+
+.dash-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 16px; padding: 28px 48px;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px 24px;
+}
+.stat-label { font-size: 11px; font-weight: 500; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+.stat-value {
+  font-family: 'Fraunces', serif;
+  font-size: 32px; font-weight: 700; color: var(--text); line-height: 1;
+}
+.stat-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+.stat-trend { font-size: 11px; color: var(--green); margin-top: 4px; }
+
+.dash-body {
+  display: grid; grid-template-columns: 1fr 340px;
+  gap: 20px; padding: 0 48px 48px;
+}
+
+/* Project list */
+.projects-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+}
+.panel-header {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.panel-action { font-size: 12px; color: var(--accent); cursor: pointer; }
+.project-row {
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 14px;
+  cursor: pointer; transition: background 0.15s;
+}
+.project-row:hover { background: var(--surface2); }
+.project-row.active { background: rgba(124,111,224,0.08); border-left: 2px solid var(--accent); }
+.project-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.project-info { flex: 1; min-width: 0; }
+.project-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.project-meta { font-size: 11px; color: var(--text3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.project-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text3);
+  background: var(--bg2); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 4px;
+}
+
+/* Memory feed */
+.memory-feed { display: flex; flex-direction: column; gap: 10px; padding: 20px 24px; }
+.memory-item {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  cursor: pointer; transition: border-color 0.15s;
+}
+.memory-item:hover { border-color: var(--border2); }
+.memory-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.memory-type {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 2px 8px; border-radius: 4px;
+}
+.type-decision { background: rgba(124,111,224,0.12); color: var(--accent2); }
+.type-context { background: rgba(45,212,191,0.10); color: var(--teal); }
+.type-error { background: rgba(248,113,113,0.10); color: var(--red); }
+.type-preference { background: rgba(251,191,36,0.10); color: var(--amber); }
+.type-thread { background: rgba(129,140,248,0.10); color: var(--indigo); }
+.memory-time { font-size: 11px; color: var(--text3); margin-left: auto; }
+.memory-content { font-size: 13px; line-height: 1.6; color: var(--text2); }
+.memory-tags { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+.memory-tag {
+  font-size: 10px; color: var(--text3);
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 999px;
+}
+
+/* Side panels */
+.side-panels { display: flex; flex-direction: column; gap: 16px; }
+.side-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+}
+
+.sync-status { padding: 20px 24px; }
+.sync-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.sync-indicator { display: flex; align-items: center; gap: 8px; }
+.sync-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s ease infinite;
+}
+.sync-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.sync-detail { font-size: 12px; color: var(--text3); }
+.sync-machines { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.machine-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px;
+  background: var(--bg); border: 1px solid var(--border);
+}
+.machine-icon { font-size: 16px; }
+.machine-name { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
+.machine-status { font-size: 10px; color: var(--green); }
+.machine-status.away { color: var(--text3); }
+
+.quick-search { padding: 20px 24px; }
+.search-input {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 8px; color: var(--text);
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  outline: none; transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text3); }
+
+/* ══════════════════════════════════════════════════════
+   CLI OUTPUT
+══════════════════════════════════════════════════════ */
+.cli-section {
+  padding-top: 80px;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding-bottom: 60px;
+}
+.cli-intro {
+  padding: 60px 48px 40px;
+  text-align: center; max-width: 640px; margin: 0 auto;
+}
+.cli-intro-title {
+  font-family: 'Fraunces', serif;
+  font-size: 36px; font-weight: 700; color: var(--text);
+  margin-bottom: 12px;
+}
+.cli-intro-sub { font-size: 15px; color: var(--text2); line-height: 1.6; }
+
+.cli-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 20px; width: 100%; max-width: 1100px;
+  padding: 0 48px;
+}
+.cli-window {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; overflow: hidden;
+}
+.cli-titlebar {
+  padding: 12px 16px; background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.cli-dots { display: flex; gap: 6px; }
+.cli-dot { width: 10px; height: 10px; border-radius: 50%; }
+.cli-dot.r { background: #FF5F57; }
+.cli-dot.y { background: #FFBD2E; }
+.cli-dot.g { background: #28CA42; }
+.cli-cmd-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text3);
+}
+.cli-body { padding: 20px 24px; font-family: 'DM Mono', monospace; font-size: 12px; line-height: 1.7; }
+.cli-prompt { color: var(--accent2); }
+.cli-cmd-text { color: var(--text); }
+.cli-out { color: var(--text2); }
+.cli-success { color: var(--green); }
+.cli-warn { color: var(--amber); }
+.cli-error { color: var(--red); }
+.cli-accent { color: var(--accent3); }
+.cli-dim { color: var(--text3); }
+.cli-section-header { color: var(--indigo); font-weight: 500; }
+.cli-blank { height: 8px; }
+.cli-indent { padding-left: 20px; }
+.cli-bar {
+  display: flex; align-items: center; gap: 8px;
+  margin: 4px 0;
+}
+.cli-bar-fill {
+  height: 4px; border-radius: 2px; background: var(--accent);
+}
+.cli-bar-bg {
+  flex: 1; height: 4px; border-radius: 2px; background: var(--border2);
+  position: relative;
+}
+.cli-bar-inner {
+  height: 100%; border-radius: 2px; background: var(--accent);
+  position: absolute; top: 0; left: 0;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">C<span>●</span>rtex</div>
+  <div class="nav-links">
+    <a href="#" onclick="showView('landing')">Product</a>
+    <a href="#" onclick="showView('dashboard')">Dashboard</a>
+    <a href="#" onclick="showView('cli')">CLI</a>
+    <a href="#">GitHub</a>
+  </div>
+  <div class="nav-right">
+    <div class="view-tabs">
+      <button class="view-tab active" onclick="showView('landing')">Landing</button>
+      <button class="view-tab" onclick="showView('dashboard')">Dashboard</button>
+      <button class="view-tab" onclick="showView('cli')">CLI</button>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️</button>
+  </div>
+</nav>
+
+<!-- ══ LANDING ══ -->
+<div class="view-section active" id="view-landing">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-badge"><div class="badge-dot"></div> Now available for Claude Code</div>
+      <h1 class="hero-title">Claude Code<br>finally <em>remembers</em></h1>
+      <p class="hero-sub">Cortex is a persistent memory layer for Claude Code. Every session starts with full context — across projects, machines, and days.</p>
+      <div class="hero-cta">
+        <button class="btn-primary">Subscribe to Download →</button>
+        <button class="btn-secondary">brew install cortex-memory</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="problem-strip">
+    <div class="problem-inner">
+      <div>
+        <div class="problem-label">The Problem</div>
+        <h2 class="problem-title">Brilliant contractor. Morning amnesia. Every day.</h2>
+        <p class="problem-body">Claude Code is extraordinary at coding. But every new session is a blank slate. No memory of last week's architecture decisions. No awareness of your preferences. No knowledge of the open threads from yesterday. You re-explain everything, every time.</p>
+      </div>
+      <div class="amnesia-card">
+        <div class="amnesia-header">
+          <span class="amnesia-icon">⚠</span>
+          <span class="amnesia-tag">Without Cortex</span>
+        </div>
+        <div class="amnesia-messages">
+          <div class="amnesia-msg user">We're using NestJS for the API and Tauri 2 for the desktop shell. The Swift sidecar handles Ghost Mode audio capture...</div>
+          <div class="amnesia-msg claude">I don't have context about your project. Could you tell me about your tech stack?</div>
+          <div class="amnesia-msg user">We discussed this yesterday. We're using Deepgram for transcription and Claude for intelligence...</div>
+          <div class="amnesia-msg claude">I don't have access to previous conversations. Could you share the architecture again?</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-section">
+    <div class="section-header">
+      <div class="section-label">How It Works</div>
+      <h2 class="section-title">Dead simple. Invisibly powerful.</h2>
+    </div>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Install in 30 seconds</div>
+          <div class="step-body">One command. Cortex installs, starts a background daemon, and wires itself into Claude Code automatically. No manual config. No setup wizard.</div>
+          <div class="step-code">brew install cortex-memory<br><span style="color:var(--green)">✓ Cortex is running. Open Claude Code to start.</span></div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Cortex learns silently</div>
+          <div class="step-body">As you work, Cortex quietly captures the things worth remembering — architectural decisions, preferences, open problems, resolved bugs. No prompts, no interruptions.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Claude starts every session informed</div>
+          <div class="step-body">Next session, Claude already knows your project. The stack, the decisions, the open threads. You start coding immediately instead of re-explaining context.</div>
+          <div class="step-code" style="color:var(--green)">✓ 12 memories loaded for karnyx<br>✓ Last session: 2 days ago<br>✓ Open thread: Deepgram transcription latency</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Works across all your machines</div>
+          <div class="step-body">Memories sync quietly to the cloud. Open Claude Code on your second machine — same context, same knowledge, instantly in sync.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTALL -->
+  <section class="install-section">
+    <div class="install-inner">
+      <div class="section-header" style="text-align:left;margin-bottom:0">
+        <div class="section-label">Install</div>
+        <h2 class="section-title">Three ways to get started</h2>
+      </div>
+      <div class="install-grid">
+        <div class="install-card">
+          <div class="install-method">Method 1</div>
+          <div class="install-for">Homebrew</div>
+          <div class="install-cmd">brew tap cortex-memory/cortex<br>brew install cortex</div>
+        </div>
+        <div class="install-card">
+          <div class="install-method">Method 2</div>
+          <div class="install-for">npx</div>
+          <div class="install-cmd">npx @cortex-memory/cli init</div>
+        </div>
+        <div class="install-card">
+          <div class="install-method">Method 3</div>
+          <div class="install-for">curl</div>
+          <div class="install-cmd">curl -fsSL install.cortex.sh | sh</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST -->
+  <section class="trust-section">
+    <div class="section-header">
+      <div class="section-label">Security</div>
+      <h2 class="section-title">Built for engineers who ask hard questions</h2>
+    </div>
+    <div class="trust-grid">
+      <div class="trust-card">
+        <div class="trust-icon">🔒</div>
+        <div class="trust-title">Local by default</div>
+        <div class="trust-body">All memories stay on your machine. Nothing leaves unless you explicitly enable cloud sync. Your code, decisions, and context are yours alone.</div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">👁</div>
+        <div class="trust-title">Full transparency</div>
+        <div class="trust-body">Fully open source. Every line of code is readable on GitHub before you install. No hidden behavior, no surprise network calls, no telemetry ever.</div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">🗑</div>
+        <div class="trust-title">Clean uninstall</div>
+        <div class="trust-body">One command removes everything — daemon, database, config files, and all .cortex project markers. Zero footprint left behind.</div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">🌐</div>
+        <div class="trust-title">Localhost only</div>
+        <div class="trust-body">The MCP server listens on localhost:7433 exclusively. It is not exposed to your local network or the internet under any circumstances.</div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">🧹</div>
+        <div class="trust-title">No sensitive storage</div>
+        <div class="trust-body">Cortex never stores code, API keys, credentials, or file contents. Only structured memory records about decisions and context.</div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">✋</div>
+        <div class="trust-title">You control everything</div>
+        <div class="trust-body">cortex show reveals all stored memories. cortex clear deletes them. cortex export lets you take your data anywhere. No lock-in.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="landing-footer">
+    <div class="footer-brand">C<span>●</span>rtex</div>
+    <div class="footer-note">A project by The Production Line · Free for subscribers</div>
+    <div class="footer-links">
+      <a href="#">GitHub</a>
+      <a href="#">Docs</a>
+      <a href="#">Newsletter</a>
+    </div>
+  </footer>
+
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div class="view-section" id="view-dashboard">
+  <div class="dashboard">
+    <div class="dash-header">
+      <div class="dash-title-group">
+        <div class="dash-greeting">Good morning — Friday, March 20</div>
+        <div class="dash-title">Memory Dashboard</div>
+      </div>
+      <div class="dash-actions">
+        <button class="dash-btn">Export</button>
+        <button class="dash-btn">cortex show</button>
+        <button class="dash-btn primary">+ Add Memory</button>
+      </div>
+    </div>
+
+    <div class="dash-stats">
+      <div class="stat-card">
+        <div class="stat-label">Total Memories</div>
+        <div class="stat-value">247</div>
+        <div class="stat-trend">↑ 12 this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Projects</div>
+        <div class="stat-value">6</div>
+        <div class="stat-sub">3 active this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Machines Synced</div>
+        <div class="stat-value">2</div>
+        <div class="stat-sub" style="color:var(--green)">● All in sync</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">DB Size</div>
+        <div class="stat-value">4.2<span style="font-size:18px;color:var(--text3)">MB</span></div>
+        <div class="stat-sub">of unlimited</div>
+      </div>
+    </div>
+
+    <div class="dash-body">
+      <div>
+        <div class="projects-panel">
+          <div class="panel-header">
+            <div class="panel-title">Projects</div>
+            <div class="panel-action">View all →</div>
+          </div>
+          <div class="project-row active">
+            <div class="project-dot" style="background:var(--accent)"></div>
+            <div class="project-info">
+              <div class="project-name">karnyx</div>
+              <div class="project-meta">Tauri 2 · NestJS · Next.js · Swift sidecar</div>
+            </div>
+            <div class="project-count">89</div>
+          </div>
+          <div class="project-row">
+            <div class="project-dot" style="background:var(--teal)"></div>
+            <div class="project-info">
+              <div class="project-name">cortex</div>
+              <div class="project-meta">TypeScript · SQLite · MCP Server</div>
+            </div>
+            <div class="project-count">34</div>
+          </div>
+          <div class="project-row">
+            <div class="project-dot" style="background:var(--amber)"></div>
+            <div class="project-info">
+              <div class="project-name">the-production-line</div>
+              <div class="project-meta">Notion · Newsletter · Content system</div>
+            </div>
+            <div class="project-count">28</div>
+          </div>
+          <div class="project-row">
+            <div class="project-dot" style="background:var(--indigo)"></div>
+            <div class="project-info">
+              <div class="project-name">brillio-hls-practice</div>
+              <div class="project-meta">Salesforce · AI · Healthcare</div>
+            </div>
+            <div class="project-count">61</div>
+          </div>
+          <div class="project-row">
+            <div class="project-dot" style="background:var(--text3)"></div>
+            <div class="project-info">
+              <div class="project-name">be-present-consulting</div>
+              <div class="project-meta">Last active 3 weeks ago</div>
+            </div>
+            <div class="project-count">22</div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px">
+          <div class="projects-panel">
+            <div class="panel-header">
+              <div class="panel-title">karnyx — Recent Memories</div>
+              <div class="panel-action">View all 89 →</div>
+            </div>
+            <div class="memory-feed">
+              <div class="memory-item">
+                <div class="memory-top">
+                  <span class="memory-type type-decision">Decision</span>
+                  <span class="memory-time">2 days ago</span>
+                </div>
+                <div class="memory-content">Using Recall.ai for Bot Mode and Swift sidecar for Ghost Mode audio capture. Ghost Mode uses system audio APIs, not mic permissions — avoids consent friction on the user side.</div>
+                <div class="memory-tags">
+                  <span class="memory-tag">audio</span>
+                  <span class="memory-tag">ghost-mode</span>
+                  <span class="memory-tag">architecture</span>
+                </div>
+              </div>
+              <div class="memory-item">
+                <div class="memory-top">
+                  <span class="memory-type type-thread">Thread</span>
+                  <span class="memory-time">2 days ago</span>
+                </div>
+                <div class="memory-content">Deepgram transcription latency is higher than expected on long-form audio. Haven't resolved this yet — needs investigation into chunking strategy vs streaming mode.</div>
+                <div class="memory-tags">
+                  <span class="memory-tag">deepgram</span>
+                  <span class="memory-tag">open</span>
+                  <span class="memory-tag">performance</span>
+                </div>
+              </div>
+              <div class="memory-item">
+                <div class="memory-top">
+                  <span class="memory-type type-context">Context</span>
+                  <span class="memory-time">5 days ago</span>
+                </div>
+                <div class="memory-content">All 8 CDK stacks are built and ready. Deployment is blocked only on API keys — Deepgram, Recall.ai, and OpenAI keys need to be provisioned and added to AWS Secrets Manager.</div>
+                <div class="memory-tags">
+                  <span class="memory-tag">cdk</span>
+                  <span class="memory-tag">deployment</span>
+                  <span class="memory-tag">blocked</span>
+                </div>
+              </div>
+              <div class="memory-item">
+                <div class="memory-top">
+                  <span class="memory-type type-preference">Preference</span>
+                  <span class="memory-time">1 week ago</span>
+                </div>
+                <div class="memory-content">Always use TypeScript strict mode. NestJS for all backend modules. Never suggest Python alternatives. Prefer AWS CDK over Terraform for infrastructure.</div>
+                <div class="memory-tags">
+                  <span class="memory-tag">typescript</span>
+                  <span class="memory-tag">preferences</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-panels">
+        <div class="side-panel">
+          <div class="panel-header">
+            <div class="panel-title">Quick Search</div>
+          </div>
+          <div class="quick-search">
+            <input class="search-input" placeholder="cortex search deepgram..." />
+          </div>
+        </div>
+
+        <div class="side-panel">
+          <div class="sync-status">
+            <div class="sync-header">
+              <div class="sync-indicator">
+                <div class="sync-dot"></div>
+                <div class="sync-label">Sync Active</div>
+              </div>
+              <div class="sync-detail" style="font-size:11px;color:var(--text3)">2 min ago</div>
+            </div>
+            <div class="sync-machines">
+              <div class="machine-row">
+                <div class="machine-icon">💻</div>
+                <div class="machine-name">MacBook Pro (primary)</div>
+                <div class="machine-status">● current</div>
+              </div>
+              <div class="machine-row">
+                <div class="machine-icon">🖥</div>
+                <div class="machine-name">MacBook Air (infra)</div>
+                <div class="machine-status away">synced 4h ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-panel">
+          <div class="panel-header">
+            <div class="panel-title">Memory by Type</div>
+          </div>
+          <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px">
+                <span style="color:var(--accent2)">Decisions</span>
+                <span style="color:var(--text3)">74</span>
+              </div>
+              <div class="cli-bar-bg"><div class="cli-bar-inner" style="width:74%;background:var(--accent)"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px">
+                <span style="color:var(--teal)">Context</span>
+                <span style="color:var(--text3)">68</span>
+              </div>
+              <div class="cli-bar-bg"><div class="cli-bar-inner" style="width:68%;background:var(--teal)"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px">
+                <span style="color:var(--indigo)">Threads</span>
+                <span style="color:var(--text3)">45</span>
+              </div>
+              <div class="cli-bar-bg"><div class="cli-bar-inner" style="width:45%;background:var(--indigo)"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px">
+                <span style="color:var(--amber)">Preferences</span>
+                <span style="color:var(--text3)">38</span>
+              </div>
+              <div class="cli-bar-bg"><div class="cli-bar-inner" style="width:38%;background:var(--amber)"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px">
+                <span style="color:var(--red)">Errors</span>
+                <span style="color:var(--text3)">22</span>
+              </div>
+              <div class="cli-bar-bg"><div class="cli-bar-inner" style="width:22%;background:var(--red)"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-panel">
+          <div class="panel-header"><div class="panel-title">Upcoming</div></div>
+          <div style="padding:16px 20px">
+            <div style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:12px">Multi-machine sync is coming to Cortex. Join the waitlist to get early access when it ships.</div>
+            <button class="dash-btn" style="width:100%;text-align:center;font-size:12px">cortex sync --waitlist →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CLI ══ -->
+<div class="view-section" id="view-cli">
+  <div class="cli-section">
+    <div class="cli-intro">
+      <div class="cli-intro-title">CLI Reference</div>
+      <div class="cli-intro-sub">Full transparency and control over your memory. Every stored memory is inspectable, searchable, and deletable from your terminal.</div>
+    </div>
+
+    <div class="cli-grid">
+
+      <!-- cortex init -->
+      <div class="cli-window">
+        <div class="cli-titlebar">
+          <div class="cli-dots"><div class="cli-dot r"></div><div class="cli-dot y"></div><div class="cli-dot g"></div></div>
+          <div class="cli-cmd-label">cortex init</div>
+        </div>
+        <div class="cli-body">
+          <div><span class="cli-prompt">$ </span><span class="cli-cmd-text">cortex init</span></div>
+          <div class="cli-blank"></div>
+          <div class="cli-out">  Initializing Cortex...</div>
+          <div class="cli-blank"></div>
+          <div class="cli-success">  ✓ Created ~/.cortex/memory.db</div>
+          <div class="cli-success">  ✓ Daemon registered with launchd</div>
+          <div class="cli-success">  ✓ Wired into ~/.claude/settings.json</div>
+          <div class="cli-success">  ✓ MCP server running on localhost:7433</div>
+          <div class="cli-blank"></div>
+          <div class="cli-out">  Cortex is running. Open Claude Code</div>
+          <div class="cli-out">  in any project to start building memory.</div>
+          <div class="cli-blank"></div>
+          <div class="cli-dim">  Version 1.0.0 · Open source on GitHub</div>
+        </div>
+      </div>
+
+      <!-- cortex status -->
+      <div class="cli-window">
+        <div class="cli-titlebar">
+          <div class="cli-dots"><div class="cli-dot r"></div><div class="cli-dot y"></div><div class="cli-dot g"></div></div>
+          <div class="cli-cmd-label">cortex status</div>
+        </div>
+        <div class="cli-body">
+          <div><span class="cli-prompt">$ </span><span class="cli-cmd-text">cortex status</span></div>
+          <div class="cli-blank"></div>
+          <div class="cli-section-header">  CORTEX v1.0.0</div>
+          <div class="cli-blank"></div>
+          <div class="cli-out">  Daemon      <span class="cli-success">● running</span> (pid 4821)</div>
+          <div class="cli-out">  MCP Server  <span class="cli-success">● localhost:7433</span></div>
+          <div class="cli-out">  Database    ~/.cortex/memory.db</div>
+          <div class="cli-out">  DB Size     4.2 MB</div>
+          <div class="cli-blank"></div>
+          <div class="cli-section-header">  MEMORY</div>
+          <div class="cli-blank"></div>
+          <div class="cli-out">  Total       247 memories</div>
+          <div class="cli-out">  Projects    6 projects</div>
+          <div class="cli-out">  Last write  2 days ago (karnyx)</div>
+          <div class="cli-blank"></div>
+          <div class="cli-section-header">  SYNC</div>
+          <div class="cli-blank"></div>
+          <div class="cli-warn">  ⚡ Coming soon — join waitlist:</div>
+          <div class="cli-dim">     cortex sync --waitlist</div>
+        </div>
+      </div>
+
+      <!-- cortex show -->
+      <div class="cli-window">
+        <div class="cli-titlebar">
+          <div class="cli-dots"><div class="cli-dot r"></div><div class="cli-dot y"></div><div class="cli-dot g"></div></div>
+          <div class="cli-cmd-label">cortex show karnyx</div>
+        </div>
+        <div class="cli-body">
+          <div><span class="cli-prompt">$ </span><span class="cli-cmd-text">cortex show karnyx</span></div>
+          <div class="cli-blank"></div>
+          <div class="cli-section-header">  KARNYX  <span class="cli-dim">89 memories</span></div>
+          <div class="cli-dim">  Tauri 2 · NestJS · Next.js · Swift</div>
+          <div class="cli-dim">  Last session: 2 days ago</div>
+          <div class="cli-blank"></div>
+          <div class="cli-accent">  [DECISION] 2 days ago</div>
+          <div class="cli-out cli-indent">Ghost Mode uses Swift sidecar for system</div>
+          <div class="cli-out cli-indent">audio. Bot Mode uses Recall.ai.</div>
+          <div class="cli-blank"></div>
+          <div class="cli-warn">  [THREAD] 2 days ago  ● open</div>
+          <div class="cli-out cli-indent">Deepgram latency issue on long-form</div>
+          <div class="cli-out cli-indent">audio. Chunking vs streaming TBD.</div>
+          <div class="cli-blank"></div>
+          <div class="cli-success">  [CONTEXT] 5 days ago</div>
+          <div class="cli-out cli-indent">All 8 CDK stacks built. Blocked on</div>
+          <div class="cli-out cli-indent">API keys for Deepgram + Recall.ai.</div>
+          <div class="cli-blank"></div>
+          <div class="cli-dim">  ... 86 more memories. cortex show karnyx --all</div>
+        </div>
+      </div>
+
+      <!-- cortex search -->
+      <div class="cli-window">
+        <div class="cli-titlebar">
+          <div class="cli-dots"><div class="cli-dot r"></div><div class="cli-dot y"></div><div class="cli-dot g"></div></div>
+          <div class="cli-cmd-label">cortex search deepgram</div>
+        </div>
+        <div class="cli-body">
+          <div><span class="cli-prompt">$ </span><span class="cli-cmd-text">cortex search deepgram</span></div>
+          <div class="cli-blank"></div>
+          <div class="cli-out">  Searching all 247 memories...</div>
+          <div class="cli-out">  Found <span class="cli-accent">3 results</span></div>
+          <div class="cli-blank"></div>
+          <div class="cli-section-header">  karnyx  <span class="cli-dim">2 matches</span></div>
+          <div class="cli-blank"></div>
+          <div class="cli-warn">  [THREAD] Deepgram latency issue on</div>
+          <div class="cli-out cli-indent">long-form audio. Needs investigation.</div>
+          <div class="cli-dim cli-indent">2 days ago · tags: deepgram, open</div>
+          <div class="cli-blank"></div>
+          <div class="cli-success">  [CONTEXT] CDK stacks built. Blocked</div>
+          <div class="cli-out cli-indent">on Deepgram API key provisioning.</div>
+          <div class="cli-dim cli-indent">5 days ago · tags: cdk, blocked</div>
+          <div class="cli-blank"></div>
+          <div class="cli-section-header">  cortex  <span class="cli-dim">1 match</span></div>
+          <div class="cli-blank"></div>
+          <div class="cli-accent">  [DECISION] Deepgram chosen over</div>
+          <div class="cli-out cli-indent">AssemblyAI for transcription layer.</div>
+          <div class="cli-dim cli-indent">1 week ago · tags: transcription</div>
+        </div>
+      </div>
+
+      <!-- cortex clear -->
+      <div class="cli-window">
+        <div class="cli-titlebar">
+          <div class="cli-dots"><div class="cli-dot r"></div><div class="cli-dot y"></div><div class="cli-dot g"></div></div>
+          <div class="cli-cmd-label">cortex clear</div>
+        </div>
+        <div class="cli-body">
+          <div><span class="cli-prompt">$ </span><span class="cli-cmd-text">cortex clear karnyx</span></div>
+          <div class="cli-blank"></div>
+          <div class="cli-warn">  ⚠  This will delete 89 memories for karnyx.</div>
+          <div class="cli-out">  A backup will be saved to:</div>
+          <div class="cli-dim">  ~/.cortex/backups/karnyx-20260320.json</div>
+          <div class="cli-blank"></div>
+          <div class="cli-out">  Type project name to confirm: <span class="cli-cmd-text">karnyx</span></div>
+          <div class="cli-blank"></div>
+          <div class="cli-success">  ✓ Backup saved</div>
+          <div class="cli-success">  ✓ 89 memories deleted for karnyx</div>
+          <div class="cli-blank"></div>
+          <div class="cli-dim">  Restore anytime:</div>
+          <div class="cli-dim">  cortex restore ~/.cortex/backups/karnyx-20260320.json</div>
+        </div>
+      </div>
+
+      <!-- cortex uninstall -->
+      <div class="cli-window">
+        <div class="cli-titlebar">
+          <div class="cli-dots"><div class="cli-dot r"></div><div class="cli-dot y"></div><div class="cli-dot g"></div></div>
+          <div class="cli-cmd-label">cortex uninstall</div>
+        </div>
+        <div class="cli-body">
+          <div><span class="cli-prompt">$ </span><span class="cli-cmd-text">cortex uninstall</span></div>
+          <div class="cli-blank"></div>
+          <div class="cli-warn">  ⚠  This will completely remove Cortex.</div>
+          <div class="cli-out">  The following will be deleted:</div>
+          <div class="cli-blank"></div>
+          <div class="cli-out">  · MCP daemon (launchd)</div>
+          <div class="cli-out">  · ~/.cortex/ (database + config)</div>
+          <div class="cli-out">  · ~/.claude/settings.json entry</div>
+          <div class="cli-out">  · All .cortex/project.json files (6 found)</div>
+          <div class="cli-blank"></div>
+          <div class="cli-out">  Export memories first? [Y/n] <span class="cli-cmd-text">Y</span></div>
+          <div class="cli-blank"></div>
+          <div class="cli-success">  ✓ Exported to ~/cortex-export-20260320.json</div>
+          <div class="cli-success">  ✓ Daemon stopped and removed</div>
+          <div class="cli-success">  ✓ ~/.cortex/ removed</div>
+          <div class="cli-success">  ✓ settings.json restored</div>
+          <div class="cli-success">  ✓ 6 .cortex folders removed</div>
+          <div class="cli-blank"></div>
+          <div class="cli-out">  Cortex has been fully removed.</div>
+          <div class="cli-dim">  Zero footprint. Clean machine.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function showView(view) {
+  document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('.view-tab').forEach(t => {
+    if (t.textContent.toLowerCase() === view) t.classList.add('active');
+  });
+}
+
+function toggleTheme() {
+  const isDark = !document.documentElement.hasAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : '');
+  document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+}
+</script>
+</body>
+</html>

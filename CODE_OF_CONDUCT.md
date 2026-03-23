@@ -28,7 +28,7 @@ Examples of unacceptable behavior:
 ## Enforcement
 
 Instances of unacceptable behavior may be reported to the project team at
-**koundinya@k2n2studio.com**. All complaints will be reviewed and investigated
+**koundinya@theproductionline.com**. All complaints will be reviewed and investigated
 promptly and fairly.
 
 Project maintainers have the right and responsibility to remove, edit, or reject
@@ -47,4 +47,4 @@ This Code of Conduct is adapted from the [Contributor Covenant](https://www.cont
 
 ---
 
-*Cortex — A project by K2N2 Studio*
+*Cortex — A project by The Production Line*

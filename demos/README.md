@@ -107,7 +107,7 @@ Record these GIFs for the README and social media. Target 10-15 seconds each.
 >
 > [link]
 >
-> Built by @kaboraiofficial at K2N2 Studio.
+> Built by @kaboraiofficial at The Production Line.
 
 ---
 

@@ -21,7 +21,7 @@
     <key>LSUIElement</key>
     <true/>
     <key>NSHumanReadableCopyright</key>
-    <string>Copyright © 2026 K2N2 Studio. All rights reserved.</string>
+    <string>Copyright © 2026 The Production Line. All rights reserved.</string>
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsLocalNetworking</key>

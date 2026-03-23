@@ -40,7 +40,7 @@ Yes. MIT license. The full source code is available on GitHub.
 
 ### Who built Cortex?
 
-Cortex is built by Koundinya Lanka at [K2N2 Studio](https://k2n2studio.com).
+Cortex is built by Koundinya Lanka at [The Production Line](https://theproductionline.com).
 
 ### What languages/frameworks is Cortex built with?
 

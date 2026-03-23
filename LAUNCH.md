@@ -159,7 +159,7 @@ npx @cortex-memory/cli init
 
 Star if useful: github.com/ProductionLineHQ/cortex
 
-Built by @[your_handle] at K2N2 Studio.
+Built by @[your_handle] at The Production Line.
 ```
 
 ---
@@ -262,7 +262,7 @@ I Built Persistent Memory for Claude Code — Here's the Architecture
 | r/programming | reddit.com/r/programming | Same day |
 | r/opensource | reddit.com/r/opensource | Same day |
 | X/Twitter | Thread from your account | Same day, after HN |
-| LinkedIn | Personal post + K2N2 Studio page | Same day |
+| LinkedIn | Personal post + The Production Line page | Same day |
 | Dev.to | dev.to/new | Day after launch |
 | Anthropic Discord | discord.gg/anthropic | Day after launch |
 | Claude Code GitHub Discussions | github.com/anthropics/claude-code | Week after (be helpful, not spammy) |

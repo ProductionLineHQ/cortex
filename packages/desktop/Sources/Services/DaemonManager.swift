@@ -217,7 +217,7 @@ final class DaemonManager: ObservableObject {
         )
 
         let plistContent: [String: Any] = [
-            "Label": "com.k2n2studio.cortex-daemon",
+            "Label": "com.theproductionline.cortex-daemon",
             "ProgramArguments": [daemonBinaryPath(), "serve"],
             "RunAtLoad": true,
             "KeepAlive": [
@@ -267,7 +267,7 @@ final class DaemonManager: ObservableObject {
     private func launchAgentPlistPath() -> String {
         let home = FileManager.default.homeDirectoryForCurrentUser
         return home
-            .appendingPathComponent("Library/LaunchAgents/com.k2n2studio.cortex-daemon.plist")
+            .appendingPathComponent("Library/LaunchAgents/com.theproductionline.cortex-daemon.plist")
             .path
     }
 }
