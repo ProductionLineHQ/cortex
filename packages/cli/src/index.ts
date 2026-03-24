@@ -195,7 +195,7 @@ program
 // SEARCH
 // ──────────────────────────────────────────
 program
-  .command('search <query>')
+  .command('search [query]')
   .description('Full-text search across all memories')
   .option('--project <id>', 'Scope to project')
   .option('--type <type>', 'Filter by type')
@@ -203,6 +203,11 @@ program
   .option('--json', 'Output as JSON')
   .action(async (query, opts) => {
     if (!(await ensureDaemon())) return;
+
+    if (!query || query.trim().length === 0) {
+      fmt.error('Please provide a search query. Usage: cortex search "your query"');
+      return;
+    }
 
     const body: Record<string, unknown> = { query };
     if (opts.project) body.project_id = opts.project;
@@ -457,12 +462,16 @@ program
     const projects = await api.listProjects();
     const exportData: any = { exported_at: new Date().toISOString(), projects: [] };
 
-    const projectList = opts.project
-      ? projects.data.filter((p: any) => p.id === opts.project)
-      : projects.data;
+    let projectList;
+    if (opts.project) {
+      const resolvedId = await resolveProjectId(opts.project);
+      projectList = projects.data.filter((p: any) => p.id === resolvedId || p.name.toLowerCase() === opts.project.toLowerCase());
+    } else {
+      projectList = projects.data;
+    }
 
     for (const p of projectList) {
-      const memories = await api.listMemories({ project_id: p.id, limit: '500' });
+      const memories = await api.listMemories({ project_id: p.id, limit: '200' });
       exportData.projects.push({
         ...p,
         memories: memories.data,
@@ -752,11 +761,27 @@ program
   .description('Delete all memories (with backup)')
   .option('--force', 'Skip confirmation')
   .option('--no-backup', 'Skip backup')
+  .option('--dry-run', 'Preview what would be deleted without deleting')
   .option('--json', 'Output as JSON')
   .action(async (project, opts) => {
     if (!(await ensureDaemon())) return;
 
     const projectId = await resolveProjectId(project);
+
+    if (opts.dryRun) {
+      const projects = await api.listProjects();
+      const projectList = projectId
+        ? projects.data.filter((p: any) => p.id === projectId)
+        : projects.data;
+      let total = 0;
+      for (const p of projectList) {
+        const memories = await api.listMemories({ project_id: p.id, limit: '200' });
+        fmt.info(`  ${p.name}: ${memories.data.length} memories would be deleted`);
+        total += memories.data.length;
+      }
+      fmt.info(`\nDry run: ${total} memories across ${projectList.length} projects would be deleted.`);
+      return;
+    }
 
     // Export backup first unless --no-backup
     if (opts.backup !== false) {
@@ -767,7 +792,7 @@ program
         : projects.data;
 
       for (const p of projectList) {
-        const memories = await api.listMemories({ project_id: p.id, limit: '500' });
+        const memories = await api.listMemories({ project_id: p.id, limit: '200' });
         exportData.projects.push({ ...p, memories: memories.data });
       }
 
@@ -808,7 +833,7 @@ program
         const projects = await api.listProjects();
         let total = 0;
         for (const p of projects.data) {
-          const memories = await api.listMemories({ project_id: p.id, limit: '500' });
+          const memories = await api.listMemories({ project_id: p.id, limit: '200' });
           for (const m of memories.data) {
             await api.deleteMemory(m.id);
           }

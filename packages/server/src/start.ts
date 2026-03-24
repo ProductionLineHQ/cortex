@@ -31,7 +31,8 @@ const sseEmitter = new SSEEmitter();
 
 if (STDIO_MODE) {
   // MCP mode — Claude Code connects via stdio
-  startMCPServer(db).catch((err) => {
+  const cwd = process.env.CORTEX_CWD || process.cwd();
+  startMCPServer(db, cwd).catch((err) => {
     console.error('[cortex] MCP server failed:', err);
     process.exit(1);
   });
