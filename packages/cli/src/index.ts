@@ -696,10 +696,19 @@ program
       checks.push({ name: 'node_version', status: 'pass', message: `v${nodeVersion}` });
       passed++;
     } else {
-      fmt.error(`Node.js: v${nodeVersion} — requires >= 18`, 'Download from nodejs.org');
-      checks.push({ name: 'node_version', status: 'fail', message: `v${nodeVersion} — requires >= 18` });
-      failed++;
-    }
+  fmt.error(
+`Node.js ${nodeVersion} detected — Cortex requires Node.js 18 or later.
+
+How to upgrade:
+
+macOS:   brew install node@22
+Linux:   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+Windows: Download from https://nodejs.org/en/download
+
+Current: ${nodeVersion}
+Required: >= 18.0.0`
+  );
+}
 
     // Check 8: Data directory
     const dataDir = path.join(os.homedir(), '.cortex');
