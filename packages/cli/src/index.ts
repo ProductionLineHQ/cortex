@@ -696,7 +696,19 @@ program
       checks.push({ name: 'node_version', status: 'pass', message: `v${nodeVersion}` });
       passed++;
     } else {
-      fmt.error(`Node.js: v${nodeVersion} — requires >= 18`, 'Download from nodejs.org');
+      const msg = `
+        Node.js v${nodeVersion} detected — Cortex requires Node.js 18 or later
+        
+        How to upgrade:
+          macOS:   brew install node@22
+          Linux:   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt install -y nodejs
+          Windows: Download from https://nodejs.org/en/download
+          nvm:     nvm install 22 && nvm use 22
+        
+        Current: v${nodeVersion}
+        Required: >= 18.0.0
+        `;
+      fmt.error(msg.trim());
       checks.push({ name: 'node_version', status: 'fail', message: `v${nodeVersion} — requires >= 18` });
       failed++;
     }
@@ -1426,7 +1438,20 @@ program
     // Step 1: Check Node version
     const major = parseInt(process.versions.node.split('.')[0], 10);
     if (major < 18) {
-      fmt.error(`Node.js v${process.versions.node} — requires >= 18`, 'Download from nodejs.org');
+      const nodeVersion = process.versions.node;
+      const msg = `
+        Node.js v${nodeVersion} detected — Cortex requires Node.js 18 or later
+        
+        How to upgrade:
+          macOS:   brew install node@22
+          Linux:   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt install -y nodejs
+          Windows: Download from https://nodejs.org/en/download
+          nvm:     nvm install 22 && nvm use 22
+        
+        Current: v${nodeVersion}
+        Required: >= 18.0.0
+        `;
+      fmt.error(msg.trim());
       return;
     }
     fmt.success(`Node.js v${process.versions.node}`);
